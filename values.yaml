@@ -1,0 +1,90 @@
+# TODO: Namespace? In ArgoCD Application?
+
+global.imageRegistry: "" # TODO:
+global.compatibility.openshift.adaptSecurityContext: force
+
+image:
+  repository: docker.io/bitnami/ghost
+  tag: 5.93.0 # TODO:
+  pullPolicy: Always
+  debug: false
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+      - ALL
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+  runAsNonRoot: true
+
+# Ghost application configuration
+ghostHost: ghost-demo.apps.example.com  # Replace with your OpenShift route host
+ghostProtocol: http
+ghostUsername: demo
+ghostPassword: demodemodemo
+ghostEmail: demo@example.com
+ghostBlogTitle: "Ghost on OpenShift Demo"
+
+# Enable persistence (OpenShift will handle PVC provisioning)
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+
+# Embedded MariaDB (also non-root)
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: ""
+    database: bitnami_ghost
+    username: bn_ghost
+    password: ghostpass
+  primary:
+    persistence:
+      enabled: true
+      size: 1Gi
+    securityContext:
+      runAsUser: 1001
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+    podSecurityContext:
+      runAsNonRoot: true
+      fsGroup: 1001
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+# Ingress is not native in OpenShift; use Route instead.
+ingress:
+  enabled: false
+
+# OpenShift Route annotation (optional, if you want Helm to create one)
+extraDeploy:
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: ghost
+    spec:
+      to:
+        kind: Service
+        name: ghost
+      port:
+        targetPort: http
+      tls:
+        termination: edge

@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ghost
+spec:
+  source:
+    repoURL: https://git.example.com/you/ghost-demo.git
+    path: charts/ghost
+    targetRevision: main
+    helm:
+      valueFiles:
+        - ../../values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ghost-demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
